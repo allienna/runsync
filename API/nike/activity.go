@@ -22,11 +22,19 @@ type activities struct {
 }
 
 type activity struct {
-	ID          string   `json:"id"`
-	Type        string   `json:"type"`
-	StartEpoch  int64    `json:"start_epoch_ms"`
-	MetricTypes []string `json:"metric_types"`
-	Metrics     []metric `json:"metrics"`
+	ID               string    `json:"id"`
+	Type             string    `json:"type"`
+	StartEpoch       int64     `json:"start_epoch_ms"`
+	ActivityDuration int64     `json:"active_duration_ms"`
+	Summaries        []summary `json:"summaries"`
+	MetricTypes      []string  `json:"metric_types"`
+	Metrics          []metric  `json:"metrics"`
+}
+
+type summary struct {
+	Metric  string  `json:"metric"`
+	Summary string  `json:"summary"`
+	Value   float32 `json:"value"`
 }
 
 type metric struct {
@@ -47,8 +55,8 @@ type paging struct {
 }
 
 // Get activities for the last 14 days
-func GetActivityIds(ctx context.Context, accessToken string) ([]activity, error) {
-	tm := time.Now().AddDate(0, 0, -14).Unix()
+func GetActivities(ctx context.Context, accessToken string) ([]activity, error) {
+	tm := time.Now().AddDate(0, 0, -100).Unix() * 1000
 
 	ctx, cancel := context.WithTimeout(ctx, httpTimeout)
 	defer cancel()
@@ -117,6 +125,7 @@ func GetActivity(ctx context.Context, accessToken string, activityId string) (*a
 
 	var data activity
 	decoder := json.NewDecoder(response.Body)
+
 	if err = decoder.Decode(&data); err != nil {
 		return nil, errors.WithMessage(err, API.ErrInvalidLoginResponse.Error())
 	}
